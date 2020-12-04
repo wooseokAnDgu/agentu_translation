@@ -1,0 +1,53 @@
+var express = require('express');
+var cors = require('cors');
+var apps = express();
+var https = require('https');
+var fs = require('fs');
+
+
+var opt_https = {
+  key : fs.readFileSync('/Users/wooseokan/Documents/4-1/ssl/cert.key'),
+  cert : fs.readFileSync('/Users/wooseokan/Documents/4-1/ssl/cert.pem')
+};
+
+https.createServer(opt_https, apps).listen(3020, function(){
+  console.log("https server listening on port " + 3020);
+});
+
+apps.all('/*', function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With");
+  next();
+});
+
+apps.use(cors());
+
+const request = require('request');
+var client_id = 'y7by84rhmb';
+var client_secret = 'X6X4OiHezj0T7ZlEvIYcDP0mmtycqlcrJhmP7g6J';
+
+apps.get('localhost/text', function(req, res) {
+  var source = req.s;
+  var target = req.t;
+  var query = '';
+  var api_url = 'https://naveropenapi.apigw.ntruss.com/recog/v1/stt?lang='
+  var request = require('request');
+  var options = {
+    url: api_url,
+    form: {'source':source, 'target':target, 'text': query},
+    headers: {'X-Naver-Client-Id':client_id, 'X-Naver-Client-Secret': client_secret}
+  };
+  request.post(options, function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      res.writeHead(200, {'Content-Type': 'text/json;charset=utf-8'});
+      res.end(body);
+    } else {
+      res.status(response.statusCode).end();
+      console.log('error = ' + response.statusCode);
+    }
+  });
+});
+
+apps.get('localhost/voice', function(req, res){
+  console.log('voice;')
+});
